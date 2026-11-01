@@ -17,3 +17,9 @@ AndroidLab/**/.gradle/
 AndroidLab/**/build/
 AndroidLab/**/__pycache__/
 android-results/
+
+.zeus-ci/comic/build/
+Pods/
+*.xcworkspace/
+node_modules/
+__pycache__/

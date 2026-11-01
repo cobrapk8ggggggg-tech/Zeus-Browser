@@ -72,6 +72,7 @@ struct BrowserSettings: Codable {
     var backupFiltersEnabled: Bool?
     var theme: BrowserTheme?
     var translation: TranslationPreferences?
+    var comicTranslation: ComicPreferences?
     var aiProviders: [AIProviderConfiguration]?
     var chromeWorkspace: ChromeWorkspace?
 }
@@ -272,6 +273,7 @@ enum BrowserDisk {
     }
     func delete(_ profile: BrowserProfile) async throws {
         guard active.isAdmin, !profile.isAdmin, profiles.count > 1 else { throw AccountError.permission }
+        try await ComicMemory.shared.clear(profile: profile.id, deleting: true)
         try await clearAndReleaseWebsiteStore(profile)
         for path in [folder(for: profile), downloads(for: profile), configurationFolder(profile)] where FileManager.default.fileExists(atPath: path.path) { try FileManager.default.removeItem(at: path) }
         AccountVault.remove(profile.id); FormVault.remove(profileID: profile.id); AISecretVault.removeAll(profile: profile.id)
@@ -281,6 +283,9 @@ enum BrowserDisk {
     }
     func resetAll() async throws {
         guard active.isAdmin else { throw AccountError.permission }
+        for profile in profiles { try await ComicMemory.shared.clear(profile: profile.id, deleting: true) }
+        try await ComicMemory.shared.clearAll()
+        await ComicLocalTranslator.shared.unload()
         let old = profiles
         for profile in old {
             try await clearAndReleaseWebsiteStore(profile)
